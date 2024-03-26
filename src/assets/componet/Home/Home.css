@@ -1,0 +1,41 @@
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  .tabs button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 10px 20px;
+    margin: 0 10px;
+    font-size: 16px;
+    width: 100%;
+  }
+  
+  .tabs button.active {
+    border-bottom: 1px solid #007bff;
+    color:#007bff;
+  }
+  
+  .tab-content {
+    border: 1px solid #ccc;
+    padding: 20px;
+  }
+  
+  .tab-content table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .tab-content th,
+  .tab-content td {
+    padding: 10px;
+    border: 1px solid #ccc;
+  }
+  
+  .tab-content th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
