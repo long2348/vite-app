@@ -1,9 +1,27 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
-import { Box, Button, Heading, Input, Text, Textarea } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Heading,
+  Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Text,
+  Textarea,
+  Toast,
+  useDisclosure,
+} from "@chakra-ui/react";
 
 import "./Home.css";
+import axios from "axios";
 interface FormData {
   title: string;
   content: string;
@@ -11,7 +29,16 @@ interface FormData {
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState(1);
-  const [arrayData, setArrayData] = useState<FormData[]>([
+  const [arrayData, setArrayData] = useState<FormData[]>([]);
+
+  const [formData, setFormData] = useState<FormData>({
+    title: "",
+    content: "",
+  });
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const defaultData: FormData[] = [
     {
       title: "Welcome to My Website1",
       content:
@@ -22,12 +49,43 @@ const Home = () => {
       content:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed accumsan tempor magna, vel vestibulum velit venenatis eget. Integer vel mauris scelerisque, semper libero id, rutrum ligula.",
     },
-  ]);
+  ];
+  const getDataPosts = async () => {
+    try {
+      const res = await axios.get("http://localhost:1337/api/posts");
+      const dataArray = res.data.data;
+      if (dataArray.length > 0) {
+        const newArray = dataArray.map((res: any) => {
+          return {
+            key: res?.id,
+            title: res?.attributes?.title,
+            content:  res?.attributes?.content,
+          };
+        });
+        setArrayData(newArray);
+      } else {
+        setArrayData(defaultData);
+      }
+      console.log('res: ' ,res);
+    } catch (error) {
+      Toast({
+        title: "Error",
+        description: `${error}`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      console.log(error);
+    }
+  };
 
-  const [formData, setFormData] = useState<FormData>({
-    title: "",
-    content: "",
-  });
+  useEffect(() => {
+    getDataPosts();
+  }, []);
+
+  const handleTabClick = (tabNumber: number) => {
+    setActiveTab(tabNumber);
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -39,11 +97,40 @@ const Home = () => {
   const handleSubmit = () => {
     // Here you can implement logic to handle form submission
     console.log("Form Data:", formData);
+    onOpen();
   };
 
-  const handleTabClick = (tabNumber: number) => {
-    setActiveTab(tabNumber);
+  const handleReset = () => {
+    setFormData({
+      title: "",
+      content: "",
+    });
   };
+
+  const createDataBlog = async () => {
+    const dataCreate = {
+      title: formData.title,
+      content: formData.content
+    } 
+    console.log({dataCreate});
+    try {
+      const dataCreateSuccess = await axios.post("http://localhost:1337/api/posts", {
+        data: dataCreate
+      });
+      console.log('data create: ', dataCreateSuccess);
+      onClose();
+      setFormData({
+        title: "",
+        content: "",
+      });
+      getDataPosts();
+    } catch (error) {
+      console.log(error);
+      onClose();
+      getDataPosts();
+    }
+  };
+
   return (
     <>
       <Heading as="h1" size="3xl">
@@ -110,6 +197,9 @@ const Home = () => {
                 value={formData.content}
                 onChange={(e) => handleChange(e, "content")}
               />
+              <Button mr="4" colorScheme="gray" onClick={handleReset}>
+                Reset
+              </Button>
               <Button colorScheme="blue" onClick={handleSubmit}>
                 Submit
               </Button>
@@ -117,6 +207,23 @@ const Home = () => {
           )}
         </div>
       </div>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Create data</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>Do you want to create this ?</ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="gray" mr={3} onClick={onClose}>
+              Close
+            </Button>
+            <Button colorScheme="blue" onClick={createDataBlog}>
+              Create
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 };
